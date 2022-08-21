@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres"
 	"github.com/gin-gonic/gin"
 	"github.com/suyogsoti/password_manager/apis/passwords"
 	"github.com/suyogsoti/password_manager/apis/users"
