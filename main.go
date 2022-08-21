@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -26,6 +27,7 @@ func main() {
 		DSN: "host=localhost user=suyogsoti dbname=password_manager port=5432 sslmode=disable",
 	}
 	if dsn := os.Getenv("password_manager_postgres_dsn"); dsn != "" {
+		log.Println("using password_manager_postgres_dsn dsn")
 		config = postgres.Config{
 			DriverName: "cloudsqlpostgres",
 			DSN:        dsn,
