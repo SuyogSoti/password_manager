@@ -41,6 +41,7 @@ func main() {
 		secure.GET("/", authenticatedIndex)
 		secure.POST("/createPassword", passwords.CreatePassword)
 		secure.POST("/listPasswords", passwords.ListPasswords)
+		secure.POST("/updatePasswords", passwords.UpdatePassword)
 	}
 
 	// Start serving the application

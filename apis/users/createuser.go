@@ -12,8 +12,11 @@ import (
 )
 
 type createUserRequest struct {
-	Email    string `json:"email" binding:"required,email"`
+	sanitizedUser
 	Password string `json:"password" binding:"required,min=3"`
+}
+type sanitizedUser struct {
+	Email string `json:"email" binding:"required,email"`
 }
 
 func CreateUser(c *gin.Context) {
@@ -41,5 +44,5 @@ func CreateUser(c *gin.Context) {
 		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
 		return
 	}
-	c.JSON(http.StatusOK, req)
+	c.JSON(http.StatusOK, req.sanitizedUser)
 }
