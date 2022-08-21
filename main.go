@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/suyogsoti/password_manager/apis/passwords"
@@ -44,6 +45,10 @@ func main() {
 		secure.POST("/updatePasswords", passwords.UpdatePassword)
 	}
 
-	// Start serving the application
-	router.Run("localhost:8080")
+	if os.Getenv("password_manager_env") == "prod" {
+		router.Run()
+	} else {
+		// Start serving the application
+		router.Run("localhost:8080")
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -122,6 +123,9 @@ func GenToken(email, password string) (string, error) {
 }
 
 func secrect() []byte {
+	if secrect := os.Getenv("password_manager_jwt_secrect"); secrect != "" {
+		return []byte(secrect)
+	}
 	return []byte("my secrect key")
 }
 
