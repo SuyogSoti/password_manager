@@ -35,7 +35,7 @@ func main() {
 	}
 	db, err := storage.SetupDB(config)
 	if err != nil {
-		panic("failed to connect database")
+		log.Panicf("failed to connect database, %v", err)
 	}
 
 	// Set the router as the default one provided by Gin
