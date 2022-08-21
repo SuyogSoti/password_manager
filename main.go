@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/suyogsoti/password_manager/auth"
 	"github.com/suyogsoti/password_manager/ginutils"
 	"github.com/suyogsoti/password_manager/storage"
+	"gorm.io/driver/postgres"
 )
 
 func indexPage(c *gin.Context) {
@@ -20,8 +22,16 @@ func authenticatedIndex(c *gin.Context) {
 }
 
 func main() {
-	dsn := "host=localhost user=suyogsoti dbname=password_manager port=5432 sslmode=disable"
-	db, err := storage.SetupDB(dsn)
+	config := postgres.Config{
+		DSN: "host=localhost user=suyogsoti dbname=password_manager port=5432 sslmode=disable",
+	}	
+	if dsn := os.Getenv("password_manager_postgres_dsn"); dsn != "" {
+		config = postgres.Config{
+			DriverName: "cloudsqlpostgres",
+			DSN: fmt.Sprintf("host=project:region:instance user=postgres dbname=postgres password=password sslmode=disable"),
+		}
+	}
+	db, err := storage.SetupDB(config)
 	if err != nil {
 		panic("failed to connect database")
 	}
