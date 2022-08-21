@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	// "strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/suyogsoti/password_manager/auth"
 	"github.com/suyogsoti/password_manager/crypto"
-
-	// "github.com/suyogsoti/password_manager/crypto"
 	"github.com/suyogsoti/password_manager/ginutils"
 	"github.com/suyogsoti/password_manager/storage"
 )

@@ -46,4 +46,3 @@ func CreatePassword(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, req)
 }
-
