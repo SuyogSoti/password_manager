@@ -24,11 +24,11 @@ func authenticatedIndex(c *gin.Context) {
 func main() {
 	config := postgres.Config{
 		DSN: "host=localhost user=suyogsoti dbname=password_manager port=5432 sslmode=disable",
-	}	
+	}
 	if dsn := os.Getenv("password_manager_postgres_dsn"); dsn != "" {
 		config = postgres.Config{
 			DriverName: "cloudsqlpostgres",
-			DSN: fmt.Sprintf("host=project:region:instance user=postgres dbname=postgres password=password sslmode=disable"),
+			DSN:        dsn,
 		}
 	}
 	db, err := storage.SetupDB(config)
