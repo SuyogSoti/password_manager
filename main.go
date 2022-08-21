@@ -31,7 +31,6 @@ func main() {
 		config = postgres.Config{
 			DriverName: "cloudsqlpostgres",
 			DSN:        dsn,
-			PreferSimpleProtocol: true, // pgx vs pq => pq does not support extended protocols
 		}
 	}
 	db, err := storage.SetupDB(config)
