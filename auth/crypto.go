@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/suyogsoti/password_manager/ginutils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -11,5 +12,6 @@ func HashPassword(password string) (string, error) {
 
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	ginutils.LogError(err, "password doesn't match")
 	return err == nil
 }

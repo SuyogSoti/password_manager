@@ -46,7 +46,7 @@ func main() {
 	corsConfig := cors.Config{
 		AllowAllOrigins:  os.Getenv("password_manager_env") != "prod",
 		AllowMethods:     []string{"POST", "GET"},
-		AllowHeaders:     []string{"content-type"},
+		AllowHeaders:     []string{"content-type", "authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}

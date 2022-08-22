@@ -2,6 +2,7 @@ package ginutils
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -31,5 +32,11 @@ func SetErrorAndAbort(c *gin.Context, code int, err error) {
 func SetDatabaseInContext(db *gorm.DB) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(databaseKey, db)
+	}
+}
+
+func LogError(err error, msg string) {
+	if err != nil {
+		log.Printf("%s: %v", msg, err)
 	}
 }
