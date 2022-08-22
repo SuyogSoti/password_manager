@@ -38,9 +38,11 @@ function insertRow(obj, table) {
 				<button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePassword('${newRow.id}')">Delete Password</button>
 	`
 }
-function deleteRow(rowId) {
+function deleteRowIfExists(rowId) {
 	const row = document.getElementById(rowId)
-	row.parentNode.removeChild(row)
+	if (row != null) {
+		row.parentNode.removeChild(row)
+	}
 }
 
 async function deletePassword(rowId) {
@@ -62,7 +64,7 @@ async function deletePassword(rowId) {
 		body: JSON.stringify(req),
 	})
 	if (resp.status == 200) {
-		deleteRow(rowId)
+		deleteRowIfExists(rowId)
 	} else if (resp.status == 401) {
 		localStorage.removeItem("password_manager_jwt_token")
 		window.location.replace(window.location.href.replace("list.html", "index.html"));
@@ -77,8 +79,8 @@ async function submit() {
 	const username = document.getElementById('site_username').value
 	const password = document.getElementById('password').value
 	const req = {
-		site: site,
-		site_user_name: username,
+		site: site.trim(),
+		site_user_name: username.trim(),
 		password: password,
 	}
 	const resp = await fetch(url + "/secure/upsertPassword", {
@@ -93,7 +95,11 @@ async function submit() {
 		document.getElementById("potential_success").hidden = false
 		document.getElementById("potential_error").hidden = true
 		document.getElementById("potential_success").innerHTML = "The password for site " + site + " and username " + username + " updated"
+		deleteRowIfExists(req.site + req.site_user_name)
 		insertRow(req, document.getElementById("passwords_body"))
+		document.getElementById('site').value = ""
+		document.getElementById('site_username').value = ""
+		document.getElementById('password').value = ""
 	} else if (resp.status == 400) {
 		document.getElementById("potential_success").hidden = true
 		document.getElementById("potential_error").hidden = false

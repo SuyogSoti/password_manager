@@ -68,7 +68,7 @@ func main() {
 		secure.GET("/", authenticatedIndex)
 		secure.POST("/listPasswords", passwords.ListPasswords)
 		secure.POST("/upsertPassword", passwords.UpsertPassword)
-		secure.POST("/deletePassword", passwords.CreatePassword)
+		secure.POST("/deletePassword", passwords.DeletePassword)
 	}
 
 	if os.Getenv("password_manager_env") == "prod" {
