@@ -1,5 +1,19 @@
 if (localStorage.getItem("password_manager_jwt_token") != null) {
 	window.location.replace(window.location.href.replace("index.html", "list.html"));
+	const req = {}
+	const resp = await fetch(url + "/secure", {
+		method: "POST",
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer ' + localStorage.getItem("password_manager_jwt_token"),
+		},
+		body: JSON.stringify(req),
+	})
+	if (resp.status == 400 || resp.status == 401) {
+		localStorage.removeItem("password_manager_jwt_token")
+	} else if (resp.status == 200) {
+		window.location.replace(window.location.href.replace("index.html", "list.html"));
+	}
 }
 
 const remoteUrl = "https://password-manager-b7jpyqffha-uc.a.run.app"
