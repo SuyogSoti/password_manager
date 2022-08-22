@@ -4,8 +4,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/suyogsoti/password_manager/apis/passwords"
 	"github.com/suyogsoti/password_manager/apis/users"
@@ -58,6 +60,17 @@ func main() {
 	}
 
 	if os.Getenv("password_manager_env") == "prod" {
+		router.Use(cors.New(cors.Config{
+			AllowOrigins:     []string{"https://github.com"},
+			AllowMethods:     []string{"POST", "GET"},
+			AllowHeaders:     []string{"Origin"},
+			ExposeHeaders:    []string{"Content-Length"},
+			AllowCredentials: true,
+			// AllowOriginFunc: func(origin string) bool {
+			// 	return origin == "https://github.com"
+			// },
+			MaxAge: 12 * time.Hour,
+		}))
 		router.Run()
 	} else {
 		// Start serving the application
