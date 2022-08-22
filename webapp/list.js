@@ -1,4 +1,5 @@
 if (localStorage.getItem("password_manager_jwt_token") == null) {
+	localStorage.removeItem("password_manager_jwt_token")
 	window.location.replace(window.location.href.replace("list.html", "index.html"));
 }
 
