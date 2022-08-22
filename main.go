@@ -25,23 +25,35 @@ func authenticatedIndex(c *gin.Context) {
 }
 
 func main() {
-	config := postgres.Config{
+	postgresConfig := postgres.Config{
 		DSN: "host=localhost user=suyogsoti dbname=password_manager port=5432 sslmode=disable",
 	}
 	if dsn := os.Getenv("password_manager_postgres_dsn"); dsn != "" {
 		log.Println("using password_manager_postgres_dsn dsn")
-		config = postgres.Config{
+		postgresConfig = postgres.Config{
 			DriverName: "cloudsqlpostgres",
 			DSN:        dsn,
 		}
 	}
-	db, err := storage.SetupDB(config)
+	db, err := storage.SetupDB(postgresConfig)
 	if err != nil {
 		log.Panicf("failed to connect database, %v", err)
 	}
 
 	// Set the router as the default one provided by Gin
 	router := gin.Default()
+	// TODO(suyogsoti): what is up with cors
+	corsConfig := cors.Config{
+		AllowAllOrigins:  os.Getenv("password_manager_env") != "prod",
+		AllowMethods:     []string{"POST", "GET"},
+		AllowHeaders:     []string{"content-type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	if os.Getenv("password_manager_env") == "prod" {
+		corsConfig.AllowOrigins = []string{"https://suyogsoti.github.io/"}
+	}
+	router.Use(cors.New(corsConfig))
 	// TODO(suyogsoti): trusting all proxies can be dangerous?
 	router.SetTrustedProxies(nil)
 	router.Use(ginutils.SetDatabaseInContext(db))
@@ -60,11 +72,6 @@ func main() {
 	}
 
 	if os.Getenv("password_manager_env") == "prod" {
-		router.Use(cors.New(cors.Config{
-			AllowOrigins: []string{"https://suyogsoti.github.io/"},
-			AllowMethods: []string{"POST", "GET"},
-			MaxAge:       12 * time.Hour,
-		}))
 		router.Run()
 	} else {
 		// Start serving the application

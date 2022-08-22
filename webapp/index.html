@@ -47,6 +47,8 @@
 	integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK"
 	crossorigin="anonymous"></script>
 <script>
+	//const url = "https://password-manager-b7jpyqffha-uc.a.run.app"
+	const url = "http://localhost:8080"
 	function submit() {
 		let email = document.getElementById('email').value
 		let password = document.getElementById('password').value
@@ -54,7 +56,7 @@
 			email: email,
 			password: password,
 		}
-		fetch("https://password-manager-b7jpyqffha-uc.a.run.app/authenticate", {
+		fetch(url + "/authenticate", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
