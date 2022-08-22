@@ -51,7 +51,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}
 	if os.Getenv("password_manager_env") == "prod" {
-		corsConfig.AllowOrigins = []string{"https://suyogsoti.github.io/"}
+		corsConfig.AllowOrigins = []string{"https://suyogsoti.github.io"}
 	}
 	router.Use(cors.New(corsConfig))
 	// TODO(suyogsoti): trusting all proxies can be dangerous?
