@@ -61,15 +61,9 @@ func main() {
 
 	if os.Getenv("password_manager_env") == "prod" {
 		router.Use(cors.New(cors.Config{
-			AllowOrigins:     []string{"https://github.com"},
-			AllowMethods:     []string{"POST", "GET"},
-			AllowHeaders:     []string{"Origin"},
-			ExposeHeaders:    []string{"Content-Length"},
-			AllowCredentials: true,
-			// AllowOriginFunc: func(origin string) bool {
-			// 	return origin == "https://github.com"
-			// },
-			MaxAge: 12 * time.Hour,
+			AllowOrigins: []string{"https://suyogsoti.github.io/"},
+			AllowMethods: []string{"POST", "GET"},
+			MaxAge:       12 * time.Hour,
 		}))
 		router.Run()
 	} else {
