@@ -44,5 +44,12 @@ func CreateUser(c *gin.Context) {
 		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
 		return
 	}
-	c.JSON(http.StatusOK, req.sanitizedUser)
+	token, err := auth.GenToken(user.Email, req.Password)
+	if err != nil {
+		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token"))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
 }
