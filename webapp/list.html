@@ -16,6 +16,30 @@
 			<h2>It doesn't know any of your passwords.</h2>
 		</div>
 		<div style="padding-top: 50px;">
+			<div>
+				<div id="potential_error" class="alert alert-danger" role="alert" hidden>
+				</div>
+				<div id="potential_success" class="alert alert-success" role="alert" hidden>
+				</div>
+				<div class="form-outline mb-4">
+					<input type="site" id="site" class="form-control" />
+					<label class="form-label" for="site">Site Name</label>
+				</div>
+
+				<div class="form-outline mb-4">
+					<input type="site_username" id="site_username" class="form-control" />
+					<label class="form-label" for="site_username">Site Username</label>
+				</div>
+
+				<div class="form-outline mb-4">
+					<input type="password" id="password" class="form-control" />
+					<label class="form-label" for="password">Password</label>
+				</div>
+
+				<!-- Submit button -->
+				<button type="button" class="btn btn-primary btn-block mb-4" onclick="submit()">Add or Update
+					Password</button>
+			</div>
 			<input class="form-control" id="password_site_search" type="text" placeholder="Search..">
 			<table id="passwords" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%">
 				<thead>
@@ -25,6 +49,8 @@
 						<th class="th-sm">Site User Name
 						</th>
 						<th class="th-sm">Password
+						</th>
+						<th class="th-sm">Delete
 						</th>
 					</tr>
 				</thead>
@@ -37,6 +63,8 @@
 						<th class="th-sm">Site User Name
 						</th>
 						<th class="th-sm">Password
+						</th>
+						<th class="th-sm">Delete
 						</th>
 					</tr>
 				</tfoot>

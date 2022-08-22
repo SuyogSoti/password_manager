@@ -17,7 +17,7 @@ type updatePasswordRequest struct {
 	Password     string `json:"password" binding:"required,min=3"`
 }
 
-func UpdatePassword(c *gin.Context) {
+func UpsertPassword(c *gin.Context) {
 	var req updatePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
@@ -34,11 +34,10 @@ func UpdatePassword(c *gin.Context) {
 		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("invalid cipher key"))
 		return
 	}
-	password := &storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site, SiteUserName: req.SiteUserName}
-	if err := db.Model(&password).Updates(storage.Password{HashedPassword: hashedPwd}).Error; err != nil {
+	password := &storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site, SiteUserName: req.SiteUserName, HashedPassword: hashedPwd}
+	if err := db.Save(&password).Error; err != nil {
 		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
 		return
 	}
 	c.JSON(http.StatusOK, req)
 }
-
