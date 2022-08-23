@@ -28,12 +28,8 @@ func DeletePassword(c *gin.Context) {
 		return
 	}
 	password := &storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site, SiteUserName: req.SiteUserName}
-	if err := db.Delete(password).Error; err != nil {
-		if strings.Contains(err.Error(), "SQLSTATE 23505") {
-			ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("site %q already has a password for user %q", req.Site, req.SiteUserName))
-			return
-		}
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
+	if err := db.Unscoped().Delete(password).Error; err != nil {
+		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error deleting password from db: %w", err))
 		return
 	}
 	c.JSON(http.StatusOK, req)
