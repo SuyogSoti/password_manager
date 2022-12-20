@@ -20,13 +20,43 @@ func Database(c *gin.Context) (*gorm.DB, error) {
 }
 
 type PasswordManagerError struct {
-	Code    int    `json:"code" binding:"required"`
-	Message string `json:"message" binding:"required"`
+	Code    int   `json:"code" binding:"required"`
+	Message error `json:"message" binding:"required"`
 }
 
-func SetErrorAndAbort(c *gin.Context, code int, err error) {
+func (p PasswordManagerError) Error() string {
+	return p.Message.Error()
+}
+
+func NewError(code int, message error) *PasswordManagerError {
+	return &PasswordManagerError{code, message}
+}
+
+func SetErrorAndAbort(c *gin.Context, err *PasswordManagerError) error {
+	if err == nil {
+		return nil
+	}
 	c.Error(err)
-	c.AbortWithStatusJSON(code, PasswordManagerError{code, err.Error()})
+	c.AbortWithStatusJSON(err.Code, err)
+	return err
+}
+
+func WrapHandler(handler func(c *gin.Context) *PasswordManagerError) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := handler(c); err != nil {
+			SetErrorAndAbort(c, err)
+		}
+	}
+}
+
+func SetGet(r *gin.RouterGroup, path string, handler func(c *gin.Context) *PasswordManagerError) {
+	r.GET(path, WrapHandler(handler))
+}
+func SetPost(r *gin.RouterGroup, path string, handler func(c *gin.Context) *PasswordManagerError) {
+	r.GET(path, WrapHandler(handler))
+}
+func SetMiddleWare(r *gin.RouterGroup, handler func(c *gin.Context) *PasswordManagerError) {
+	r.Use(WrapHandler(handler))
 }
 
 func SetDatabaseInContext(db *gorm.DB) func(c *gin.Context) {

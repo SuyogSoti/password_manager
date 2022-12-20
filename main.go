@@ -42,7 +42,6 @@ func main() {
 
 	// Set the router as the default one provided by Gin
 	router := gin.Default()
-	// TODO(suyogsoti): what is up with cors
 	corsConfig := cors.Config{
 		AllowAllOrigins:  os.Getenv("password_manager_env") != "prod",
 		AllowMethods:     []string{"POST", "GET"},
@@ -54,21 +53,23 @@ func main() {
 		corsConfig.AllowOrigins = []string{"https://suyogsoti.github.io"}
 	}
 	router.Use(cors.New(corsConfig))
-	// TODO(suyogsoti): trusting all proxies can be dangerous?
 	router.SetTrustedProxies(nil)
 	router.Use(ginutils.SetDatabaseInContext(db))
 
-	router.GET("/", indexPage)
-	router.POST("/createUser", users.CreateUser)
-	router.POST("/authenticate", auth.Authenticate)
-
-	secure := router.Group("/secure")
+	root := router.Group("/")
 	{
-		secure.Use(auth.CheckAuthenticated())
-		secure.GET("/", authenticatedIndex)
-		secure.POST("/listPasswords", passwords.ListPasswords)
-		secure.POST("/upsertPassword", passwords.UpsertPassword)
-		secure.POST("/deletePassword", passwords.DeletePassword)
+		root.GET("/", indexPage)
+		ginutils.SetPost(root, "/createUser", users.CreateUser)
+		ginutils.SetPost(root, "/authenticate", auth.Authenticate)
+
+		secure := root.Group("/secure")
+		{
+			ginutils.SetMiddleWare(secure, auth.CheckAuthenticated)
+			secure.GET("/", authenticatedIndex)
+			ginutils.SetPost(secure, "/listPasswords", passwords.ListPasswords)
+			ginutils.SetPost(secure, "/upsertPassword", passwords.UpsertPassword)
+			ginutils.SetPost(secure, "/deletePassword", passwords.DeletePassword)
+		}
 	}
 
 	if os.Getenv("password_manager_env") == "prod" {

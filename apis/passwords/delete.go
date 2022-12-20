@@ -15,21 +15,19 @@ type deletePasswordRequest struct {
 	SiteUserName string `json:"site_user_name" binding:"required"`
 }
 
-func DeletePassword(c *gin.Context) {
+func DeletePassword(c *gin.Context) *ginutils.PasswordManagerError {
 	var req deletePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
-		return
+		return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
 	}
 	db, err := ginutils.Database(c)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, err)
-		return
+		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	password := &storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site, SiteUserName: req.SiteUserName}
 	if err := db.Unscoped().Delete(password).Error; err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error deleting password from db: %w", err))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error deleting password from db: %w", err))
 	}
 	c.JSON(http.StatusOK, req)
+	return nil
 }

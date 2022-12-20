@@ -21,30 +21,27 @@ type listPasswordResponse struct {
 	Password     string `json:"password" binding:"required,min=3"`
 }
 
-func ListPasswords(c *gin.Context) {
+func ListPasswords(c *gin.Context) *ginutils.PasswordManagerError {
 	var req listPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
-		return
+		return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
 	}
 	db, err := ginutils.Database(c)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, err)
-		return
+		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	var passwords []storage.Password
 	if err := db.Where(&storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site}).Find(&passwords).Error; err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("err getting passwords: %w", err))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("err getting passwords: %w", err))
 	}
 	resp := []listPasswordResponse{}
 	for _, password := range passwords {
 		pswd, err := crypto.Decrypt(c, password.HashedPassword)
 		if err != nil {
-			ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error descrypting password for site %q and username %q", password.Site, password.SiteUserName))
-			return
+			return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error descrypting password for site %q and username %q", password.Site, password.SiteUserName))
 		}
 		resp = append(resp, listPasswordResponse{password.Site, password.SiteUserName, pswd})
 	}
 	c.JSON(http.StatusOK, resp)
+	return nil
 }

@@ -17,27 +17,28 @@ type updatePasswordRequest struct {
 	Password     string `json:"password" binding:"required,min=3"`
 }
 
-func UpsertPassword(c *gin.Context) {
+func UpsertPassword(c *gin.Context) *ginutils.PasswordManagerError {
 	var req updatePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
-		return
+		return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
 	}
 	db, err := ginutils.Database(c)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, err)
-		return
+		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	hashedPwd, err := crypto.Encrypt(c, req.Password)
 	if err != nil {
-		c.Error(err)
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("invalid cipher key"))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("invalid cipher key"))
 	}
-	password := &storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site, SiteUserName: req.SiteUserName, HashedPassword: hashedPwd}
+	password := &storage.Password{
+		UserEmail:      auth.GetCredentials(c).Email,
+		Site:           req.Site,
+		SiteUserName:   req.SiteUserName,
+		HashedPassword: hashedPwd,
+	}
 	if err := db.Save(&password).Error; err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
 	}
 	c.JSON(http.StatusOK, req)
+	return nil
 }

@@ -19,37 +19,32 @@ type sanitizedUser struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-func CreateUser(c *gin.Context) {
+func CreateUser(c *gin.Context) *ginutils.PasswordManagerError {
 	var req createUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
-		return
+		return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
 	}
 	db, err := ginutils.Database(c)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, err)
-		return
+		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	hashedPswd, err := auth.HashPassword(req.Password)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("password can not be hashed: %w", err))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("password can not be hashed: %w", err))
 	}
 	user := &storage.User{Email: req.Email, HashedPassword: hashedPswd}
 	if err := db.Create(user).Error; err != nil {
 		if strings.Contains(err.Error(), "SQLSTATE 23505") {
-			ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("user %q already exists", req.Email))
-			return
+			return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("user %q already exists", req.Email))
 		}
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error writing user to db: %w", err))
 	}
 	token, err := auth.GenToken(user.Email, req.Password)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token"))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token"))
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 	})
+	return nil
 }

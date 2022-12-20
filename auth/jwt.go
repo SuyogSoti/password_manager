@@ -26,67 +26,59 @@ type Credentials struct {
 // Create a struct that will be encoded to a JWT.
 // We add jwt.StandardClaims as an embedded type, to provide fields like expiry time
 type JwtClaims struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password" binding:"required,min=3"`
 	jwt.StandardClaims
 }
 
-func Authenticate(c *gin.Context) {
+func Authenticate(c *gin.Context) *ginutils.PasswordManagerError {
 	var req Credentials
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
-		return
+		return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("invalid json: %w", err))
 	}
 	db, err := ginutils.Database(c)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, err)
-		return
+		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	var user storage.User
 	if err := db.First(&user).Error; err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusUnauthorized, fmt.Errorf("the email or the user name is incorrect"))
-		return
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("the email or the user name is incorrect"))
 	}
 	if !CheckPasswordHash(req.Password, user.HashedPassword) {
-		ginutils.SetErrorAndAbort(c, http.StatusUnauthorized, fmt.Errorf("the email or the user name is incorrect"))
-		return
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("the email or the user name is incorrect"))
 	}
 	token, err := GenToken(user.Email, req.Password)
 	if err != nil {
-		ginutils.SetErrorAndAbort(c, http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token"))
-		return
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("failed to generate jwt token"))
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 	})
+	return nil
 }
 
-func CheckAuthenticated() func(c *gin.Context) {
-	return func(c *gin.Context) {
-		// There are three ways for the client to carry a Token. 1 Put in request header 2 Put in the request body 3 Put in URI
-		// Here, it is assumed that the Token is placed in the Authorization of the Header and starts with Bearer
-		// The specific implementation method here should be determined according to your actual business situation
-		authHeader := c.Request.Header.Get("Authorization")
-		if authHeader == "" {
-			ginutils.SetErrorAndAbort(c, http.StatusUnauthorized, fmt.Errorf("request header auth empty"))
-			return
-		}
-		// Split by space
-		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			ginutils.SetErrorAndAbort(c, http.StatusUnauthorized, fmt.Errorf("request header auth invalid format"))
-			return
-		}
-		// parts[1] is the obtained tokenString. We use the previously defined function to parse JWT to parse it
-		mc, err := ParseToken(parts[1])
-		if err != nil {
-			ginutils.SetErrorAndAbort(c, http.StatusUnauthorized, fmt.Errorf("invalid token"))
-			return
-		}
-		// Save the currently requested username information to the requested context c
-		c.Set(credentialsKey, Credentials{mc.Email, mc.Password})
-		c.Next() // Subsequent processing functions can use c.Get("username") to obtain the currently requested user information
+func CheckAuthenticated(c *gin.Context) *ginutils.PasswordManagerError {
+	// There are three ways for the client to carry a Token. 1 Put in request header 2 Put in the request body 3 Put in URI
+	// Here, it is assumed that the Token is placed in the Authorization of the Header and starts with Bearer
+	// The specific implementation method here should be determined according to your actual business situation
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader == "" {
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("request header auth empty"))
 	}
+	// Split by space
+	parts := strings.SplitN(authHeader, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("request header auth invalid format"))
+	}
+	// parts[1] is the obtained tokenString. We use the previously defined function to parse JWT to parse it
+	mc, err := ParseToken(parts[1])
+	if err != nil {
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("invalid token"))
+	}
+	// Save the currently requested username information to the requested context c
+	c.Set(credentialsKey, Credentials{mc.Email, mc.Password})
+	c.Next() // Subsequent processing functions can use c.Get("username") to obtain the currently requested user information
+	return nil
 }
 
 // ParseToken parsing JWT
