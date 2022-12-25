@@ -1,6 +1,7 @@
 create TABLE Users (
 		Email varchar(255) NOT NULL PRIMARY KEY,
 		HashedPassword varchar(255) NOT NULL,
+		EncryptedKeys varchar(255) NOT NULL,
 );
 
 create TABLE Passwords (

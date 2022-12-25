@@ -36,7 +36,7 @@ func ListPasswords(c *gin.Context) *ginutils.PasswordManagerError {
 	}
 	resp := []listPasswordResponse{}
 	for _, password := range passwords {
-		pswd, err := crypto.Decrypt(c, password.HashedPassword)
+		pswd, err := crypto.Decrypt(auth.GetCredentials(c).Password, password.HashedPassword)
 		if err != nil {
 			return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error descrypting password for site %q and username %q", password.Site, password.SiteUserName))
 		}

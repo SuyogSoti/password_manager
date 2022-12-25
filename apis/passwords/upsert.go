@@ -26,7 +26,7 @@ func UpsertPassword(c *gin.Context) *ginutils.PasswordManagerError {
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
-	hashedPwd, err := crypto.Encrypt(c, req.Password)
+	hashedPwd, err := crypto.Encrypt(auth.GetCredentials(c).Password, req.Password)
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("invalid cipher key"))
 	}

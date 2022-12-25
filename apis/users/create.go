@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/suyogsoti/password_manager/auth"
+	"github.com/suyogsoti/password_manager/crypto"
 	"github.com/suyogsoti/password_manager/ginutils"
 	"github.com/suyogsoti/password_manager/storage"
 )
@@ -32,7 +34,11 @@ func CreateUser(c *gin.Context) *ginutils.PasswordManagerError {
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("password can not be hashed: %w", err))
 	}
-	user := &storage.User{Email: req.Email, HashedPassword: hashedPswd}
+	encryptedKey, err := crypto.Encrypt(req.Password, uuid.NewString())
+	if err != nil {
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("unable to create encrypted key: %w", err))
+	}
+	user := &storage.User{Email: req.Email, HashedPassword: hashedPswd, EncryptedKey: encryptedKey}
 	if err := db.Create(user).Error; err != nil {
 		if strings.Contains(err.Error(), "SQLSTATE 23505") {
 			return ginutils.NewError(http.StatusBadRequest, fmt.Errorf("user %q already exists", req.Email))

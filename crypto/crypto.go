@@ -8,12 +8,9 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/gin-gonic/gin"
-	"github.com/suyogsoti/password_manager/auth"
 )
 
-func getKeyFromPassword(password string) []byte {
+func getPaddedKey(password string) []byte {
 	diff := 32 - len(password)
 	if diff > 0 {
 		password = password + strings.Repeat("a", diff)
@@ -21,8 +18,8 @@ func getKeyFromPassword(password string) []byte {
 	return []byte(password)
 }
 
-func Encrypt(c *gin.Context, sitePswd string) (string, error) {
-	block, err := aes.NewCipher(getKeyFromPassword(auth.GetCredentials(c).Password))
+func Encrypt(key string, sitePswd string) (string, error) {
+	block, err := aes.NewCipher(getPaddedKey(key))
 	if err != nil {
 		return "", fmt.Errorf("could not create cipher: %w", err)
 	}
@@ -37,10 +34,8 @@ func Encrypt(c *gin.Context, sitePswd string) (string, error) {
 	return fmt.Sprintf("%x", ciphertext), nil
 }
 
-
-func Decrypt(c *gin.Context, encryptedString string) (string, error) {
-
-	key := getKeyFromPassword(auth.GetCredentials(c).Password)
+func Decrypt(decryptionKey string, encryptedString string) (string, error) {
+	key := getPaddedKey(decryptionKey)
 	enc, _ := hex.DecodeString(encryptedString)
 
 	//Create a new Cipher Block from the key
