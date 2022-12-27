@@ -30,13 +30,21 @@ func ListPasswords(c *gin.Context) *ginutils.PasswordManagerError {
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
+	var user storage.User
+	if err := db.First(&user, auth.GetCredentials(c).Email).Error; err != nil {
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("error getting user: %w", err))
+	}
+	encryptionKey, err := crypto.Decrypt(auth.GetCredentials(c).Password, user.EncryptedKey)
+	if err != nil {
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error fetching encryption key: %w", err))
+	}
 	var passwords []storage.Password
 	if err := db.Where(&storage.Password{UserEmail: auth.GetCredentials(c).Email, Site: req.Site}).Find(&passwords).Error; err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("err getting passwords: %w", err))
 	}
 	resp := []listPasswordResponse{}
 	for _, password := range passwords {
-		pswd, err := crypto.Decrypt(auth.GetCredentials(c).Password, password.HashedPassword)
+		pswd, err := crypto.Decrypt(encryptionKey, password.HashedPassword)
 		if err != nil {
 			return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error descrypting password for site %q and username %q", password.Site, password.SiteUserName))
 		}

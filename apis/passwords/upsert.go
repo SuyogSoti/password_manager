@@ -26,7 +26,15 @@ func UpsertPassword(c *gin.Context) *ginutils.PasswordManagerError {
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
-	hashedPwd, err := crypto.Encrypt(auth.GetCredentials(c).Password, req.Password)
+	var user storage.User
+	if err := db.First(&user, auth.GetCredentials(c).Email).Error; err != nil {
+		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("error getting user: %w", err))
+	}
+	encryptionKey, err := crypto.Decrypt(auth.GetCredentials(c).Password, user.EncryptedKey)
+	if err != nil {
+		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("error fetching encryption key: %w", err))
+	}
+	hashedPwd, err := crypto.Encrypt(encryptionKey, req.Password)
 	if err != nil {
 		return ginutils.NewError(http.StatusInternalServerError, fmt.Errorf("invalid cipher key"))
 	}

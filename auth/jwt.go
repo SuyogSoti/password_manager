@@ -41,7 +41,7 @@ func Authenticate(c *gin.Context) *ginutils.PasswordManagerError {
 		return ginutils.NewError(http.StatusInternalServerError, err)
 	}
 	var user storage.User
-	if err := db.First(&user).Error; err != nil {
+	if err := db.First(&user, req.Email).Error; err != nil {
 		return ginutils.NewError(http.StatusUnauthorized, fmt.Errorf("the email or the user name is incorrect"))
 	}
 	if !CheckPasswordHash(req.Password, user.HashedPassword) {
